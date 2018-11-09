@@ -58,14 +58,10 @@ func (p Psql) Version() (string, error) {
 		return "", err
 	}
 
-	err = db.Ping()
-	stmt, err := db.Prepare("SELECT version()")
-	if err != nil {
-		return "", err
-	}
+	defer db.Close()
 
 	var version string
-	_ = stmt.QueryRow().Scan(&version)
+	_ = db.QueryRow("SELECT version()").Scan(&version)
 
 	return version, nil
 }
