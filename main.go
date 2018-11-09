@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"os/exec"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -20,8 +19,7 @@ type VersionCheck interface {
 }
 
 type Mysql struct {
-	Dbserver string
-	Host     string
+	Host string
 }
 
 type Psql struct {
@@ -29,11 +27,29 @@ type Psql struct {
 }
 
 func (m Mysql) Version() (string, error) {
-	out, err := exec.Command(m.Dbserver, "-V").CombinedOutput()
+	db, err := sql.Open("mysql", m.Host)
 	if err != nil {
 		return "", err
 	}
-	return string(out), nil
+
+	rows, err := db.Query("SHOW VARIABLES LIKE '%version%'")
+	if err != nil {
+		return "", nil
+	}
+	defer db.Close()
+
+	var version, variable, value string
+	version = "MySql "
+	for rows.Next() {
+		err := rows.Scan(&variable, &value)
+		if err != nil {
+			return "", err
+		}
+		version += value + " "
+	}
+
+	return version, nil
+
 }
 
 func (p Psql) Version() (string, error) {
@@ -65,7 +81,7 @@ func DBVersion(db VersionCheck) {
 
 func main() {
 	db := flag.String("db", "mysql", "Specify your database server")
-	host := flag.String("host", "root:root@localhost/user-db", "Specify your database connection URI depending your server")
+	host := flag.String("host", "root@tcp(localhost:3306)/test", "Specify your database connection URI depending your server")
 	flag.Parse()
 	switch *db {
 	case "postgresql":
@@ -75,8 +91,7 @@ func main() {
 		DBVersion(psq)
 	default:
 		msq := Mysql{
-			Dbserver: *db,
-			Host:     *host,
+			Host: *host,
 		}
 		DBVersion(msq)
 	}
