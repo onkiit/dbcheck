@@ -5,11 +5,11 @@ import (
 	"fmt"
 )
 
-type Mysql struct {
+type mysql struct {
 	Host string
 }
 
-func (m Mysql) Version() (string, error) {
+func (m mysql) Version() (string, error) {
 	db, err := sql.Open("mysql", m.Host)
 	if err != nil {
 		fmt.Println("connect mysql", err)
@@ -37,8 +37,8 @@ func (m Mysql) Version() (string, error) {
 	return version, nil
 }
 
-func NewMysql(host string) VersionCheck {
-	return Mysql{
+func NewMysql(host string) VersionChecker {
+	return mysql{
 		Host: host,
 	}
 }

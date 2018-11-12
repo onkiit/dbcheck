@@ -1,5 +1,5 @@
 package check
 
-type VersionCheck interface {
+type VersionChecker interface {
 	Version() (string, error)
 }
