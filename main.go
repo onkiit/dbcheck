@@ -22,19 +22,18 @@ func main() {
 	db := flag.String("db", "mysql", "Specify your database server")
 	host := flag.String("host", "root@tcp(localhost:3306)/test", "Specify your database connection URI depending your server")
 	flag.Parse()
+	var versionCheck database.VersionCheck
 	switch *db {
 	case "postgresql":
-		psq := database.NewPsql(*host)
-		DBVersion(psq)
+		versionCheck = database.NewPsql(*host)
 	case "mongodb":
-		mongo := database.NewMongo(*host)
-		DBVersion(mongo)
+		versionCheck = database.NewMongo(*host)
 	case "redis":
-		redis := database.NewRedis(*host)
-		DBVersion(redis)
+		versionCheck = database.NewRedis(*host)
 	default:
-		msq := database.NewMysql(*host)
-		DBVersion(msq)
+		versionCheck = database.NewMysql(*host)
 	}
+
+	DBVersion(versionCheck)
 
 }
