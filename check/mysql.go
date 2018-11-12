@@ -38,7 +38,7 @@ func (m Mysql) Version() (string, error) {
 }
 
 func NewMysql(host string) VersionCheck {
-	return &Mysql{
+	return Mysql{
 		Host: host,
 	}
 }

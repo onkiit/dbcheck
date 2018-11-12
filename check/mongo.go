@@ -29,7 +29,7 @@ func (m Mongo) Version() (string, error) {
 }
 
 func NewMongo(host string) VersionCheck {
-	return &Mongo{
+	return Mongo{
 		Host: host,
 	}
 }

@@ -21,7 +21,7 @@ func (p Psql) Version() (string, error) {
 }
 
 func NewPsql(host string) VersionCheck {
-	return &Psql{
+	return Psql{
 		Host: host,
 	}
 }

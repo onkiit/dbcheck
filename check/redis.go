@@ -26,7 +26,7 @@ func (r Redis) Version() (string, error) {
 }
 
 func NewRedis(host string) VersionCheck {
-	return &Redis{
+	return Redis{
 		Host: host,
 	}
 }
