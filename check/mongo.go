@@ -6,16 +6,18 @@ import (
 	"github.com/globalsign/mgo"
 )
 
-type Mongo struct {
+type mongo struct {
 	Host string
 }
 
-func (m Mongo) Version() (string, error) {
+func (m mongo) Version() (string, error) {
 	session, err := mgo.Dial(m.Host)
 	if err != nil {
 		fmt.Println("mongo conn", err)
 		return "", err
 	}
+
+	defer session.Close()
 
 	buildInfo, err := session.BuildInfo()
 	if err != nil {
@@ -28,8 +30,8 @@ func (m Mongo) Version() (string, error) {
 	return version, nil
 }
 
-func NewMongo(host string) VersionCheck {
-	return Mongo{
+func NewMongo(host string) VersionChecker {
+	return mongo{
 		Host: host,
 	}
 }

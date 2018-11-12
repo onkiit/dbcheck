@@ -2,11 +2,11 @@ package check
 
 import "database/sql"
 
-type Psql struct {
+type psql struct {
 	Host string
 }
 
-func (p Psql) Version() (string, error) {
+func (p psql) Version() (string, error) {
 	db, err := sql.Open("postgres", p.Host)
 	if err != nil {
 		return "", err
@@ -20,8 +20,8 @@ func (p Psql) Version() (string, error) {
 	return version, nil
 }
 
-func NewPsql(host string) VersionCheck {
-	return Psql{
+func NewPsql(host string) VersionChecker {
+	return psql{
 		Host: host,
 	}
 }
