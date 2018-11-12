@@ -6,10 +6,10 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
-	"github.com/onkiit/dbcheck/database"
+	"github.com/onkiit/dbcheck/check"
 )
 
-func DBVersion(db database.VersionCheck) {
+func DBVersion(db check.VersionCheck) {
 	version, err := db.Version()
 	if err != nil {
 		fmt.Println("print version", err)
@@ -22,16 +22,16 @@ func main() {
 	db := flag.String("db", "mysql", "Specify your database server")
 	host := flag.String("host", "root@tcp(localhost:3306)/test", "Specify your database connection URI depending your server")
 	flag.Parse()
-	var versionCheck database.VersionCheck
+	var versionCheck check.VersionCheck
 	switch *db {
 	case "postgresql":
-		versionCheck = database.NewPsql(*host)
+		versionCheck = check.NewPsql(*host)
 	case "mongodb":
-		versionCheck = database.NewMongo(*host)
+		versionCheck = check.NewMongo(*host)
 	case "redis":
-		versionCheck = database.NewRedis(*host)
+		versionCheck = check.NewRedis(*host)
 	default:
-		versionCheck = database.NewMysql(*host)
+		versionCheck = check.NewMysql(*host)
 	}
 
 	DBVersion(versionCheck)
