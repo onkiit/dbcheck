@@ -6,11 +6,11 @@ import (
 )
 
 type mysql struct {
-	Host string
+	host string
 }
 
 func (m mysql) Version() (string, error) {
-	db, err := sql.Open("mysql", m.Host)
+	db, err := sql.Open("mysql", m.host)
 	if err != nil {
 		fmt.Println("connect mysql", err)
 		return "", err
@@ -37,8 +37,16 @@ func (m mysql) Version() (string, error) {
 	return version, nil
 }
 
+func (m mysql) ActiveClient() (string, error) {
+	return "", nil
+}
+
+func (m mysql) Health() (string, error) {
+	return "", nil
+}
+
 func NewMysql(host string) VersionChecker {
 	return mysql{
-		Host: host,
+		host: host,
 	}
 }

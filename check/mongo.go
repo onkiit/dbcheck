@@ -7,11 +7,11 @@ import (
 )
 
 type mongo struct {
-	Host string
+	host string
 }
 
 func (m mongo) Version() (string, error) {
-	session, err := mgo.Dial(m.Host)
+	session, err := mgo.Dial(m.host)
 	if err != nil {
 		fmt.Println("mongo conn", err)
 		return "", err
@@ -30,8 +30,16 @@ func (m mongo) Version() (string, error) {
 	return version, nil
 }
 
+func (m mongo) ActiveClient() (string, error) {
+	return "", nil
+}
+
+func (m mongo) Health() (string, error) {
+	return "", nil
+}
+
 func NewMongo(host string) VersionChecker {
 	return mongo{
-		Host: host,
+		host: host,
 	}
 }

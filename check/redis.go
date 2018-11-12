@@ -7,11 +7,11 @@ import (
 )
 
 type rediss struct {
-	Host string
+	host string
 }
 
 func (r rediss) Version() (string, error) {
-	con, err := redis.Dial("tcp", r.Host)
+	con, err := redis.Dial("tcp", r.host)
 	if err != nil {
 		return "", err
 	}
@@ -27,8 +27,16 @@ func (r rediss) Version() (string, error) {
 	return version, nil
 }
 
+func (r rediss) ActiveClient() (string, error) {
+	return "", nil
+}
+
+func (r rediss) Health() (string, error) {
+	return "", nil
+}
+
 func NewRedis(host string) VersionChecker {
 	return rediss{
-		Host: host,
+		host: host,
 	}
 }
