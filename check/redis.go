@@ -16,6 +16,8 @@ func (r rediss) Version() (string, error) {
 		return "", err
 	}
 
+	defer con.Close()
+
 	version, err := redis.String(con.Do("INFO"))
 	if err != nil {
 		fmt.Println("getting info", err)
