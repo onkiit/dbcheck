@@ -35,9 +35,16 @@ func (p *psql) Dial() error {
 	if err != nil {
 		return err
 	}
-
-	defer db.Close()
 	p.DB = db
+
+	return nil
+}
+
+func (p *psql) GetInfo() error {
+	if err := p.Dial(); err != nil {
+		fmt.Println(err)
+		return err
+	}
 	if err := p.Version(); err != nil {
 		fmt.Println(err)
 		return err
@@ -49,7 +56,7 @@ func (p *psql) Dial() error {
 	return nil
 }
 
-func NewPsql(host string) Dialer {
+func NewPsql(host string) DBChecker {
 	return &psql{
 		host: host,
 	}

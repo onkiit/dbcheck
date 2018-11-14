@@ -8,14 +8,14 @@ import (
 	"github.com/onkiit/dbcheck/check"
 )
 
-var checkers = map[string]func(host string) check.Dialer{
+var checkers = map[string]func(host string) check.DBChecker{
 	// "mysql":      check.NewMysql,
 	"postgresql": check.NewPsql,
 	// "mongo":      check.NewMongo,
 	"redis": check.NewRedis,
 }
 
-func newChecker(db string, host string) check.Dialer {
+func newChecker(db string, host string) check.DBChecker {
 	if _, ok := checkers[db]; ok {
 		return checkers[db](host)
 	}
@@ -27,5 +27,5 @@ func main() {
 	host := flag.String("host", "root@tcp(localhost:3306)/test", "Specify your database connection URI depending your server")
 	flag.Parse()
 	var checker = newChecker(*db, *host)
-	checker.Dial()
+	checker.GetInfo()
 }

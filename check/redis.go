@@ -79,9 +79,16 @@ func (r *rediss) Dial() error {
 		fmt.Println(err)
 		return err
 	}
-
-	defer con.Close()
 	r.con = con
+
+	return nil
+}
+
+func (r *rediss) GetInfo() error {
+	if err := r.Dial(); err != nil {
+		fmt.Println(err)
+		return err
+	}
 
 	if err := r.Version(); err != nil {
 		fmt.Println(err)
@@ -92,10 +99,11 @@ func (r *rediss) Dial() error {
 		fmt.Println(err)
 		return err
 	}
+
 	return nil
 }
 
-func NewRedis(host string) Dialer {
+func NewRedis(host string) DBChecker {
 	return &rediss{
 		host: host,
 	}

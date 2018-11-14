@@ -11,3 +11,7 @@ type ClientChecker interface {
 type Dialer interface {
 	Dial() error
 }
+
+type DBChecker interface {
+	GetInfo() error
+}
