@@ -12,7 +12,7 @@ var checkers = map[string]func(host string) check.Dialer{
 	// "mysql":      check.NewMysql,
 	"postgresql": check.NewPsql,
 	// "mongo":      check.NewMongo,
-	// "redis":      check.NewRedis,
+	"redis": check.NewRedis,
 }
 
 func newChecker(db string, host string) check.Dialer {
