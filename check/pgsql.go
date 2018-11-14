@@ -1,35 +1,61 @@
 package check
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+)
 
 type psql struct {
+	DB   *sql.DB
 	host string
 }
 
-func (p psql) Version() (string, error) {
+type clients struct {
+	usename string `json:"usename"`
+	datname string `json:"datname"`
+}
+
+func (p *psql) Version() error {
+	var version string
+	_ = p.DB.QueryRow("SELECT version()").Scan(&version)
+
+	fmt.Println(version)
+	return nil
+}
+
+func (p *psql) ActiveClient() error {
+	var count int
+	err := p.DB.QueryRow("SELECT count(0) FROM pg_stat_activity where state='active' ").Scan(&count)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	info := fmt.Sprintf("active_client(s): %d", count)
+	fmt.Println(info)
+	return nil
+}
+
+func (p *psql) Dial() error {
 	db, err := sql.Open("postgres", p.host)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	defer db.Close()
-
-	var version string
-	_ = db.QueryRow("SELECT version()").Scan(&version)
-
-	return version, nil
+	p.DB = db
+	if err := p.Version(); err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if err := p.ActiveClient(); err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
 
-func (p psql) ActiveClient() (string, error) {
-	return "", nil
-}
-
-func (p psql) Health() (string, error) {
-	return "", nil
-}
-
-func NewPsql(host string) VersionChecker {
-	return psql{
+func NewPsql(host string) Dialer {
+	return &psql{
 		host: host,
 	}
 }

@@ -1,7 +1,13 @@
 package check
 
 type VersionChecker interface {
-	Version() (string, error)
-	ActiveClient() (string, error)
-	Health() (string, error)
+	Version() error
+}
+
+type ClientChecker interface {
+	ActiveClient() error
+}
+
+type Dialer interface {
+	Dial() error
 }
