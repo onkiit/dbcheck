@@ -9,7 +9,7 @@ import (
 )
 
 var checkers = map[string]func(host string) check.DBChecker{
-	// "mysql":      check.NewMysql,
+	"mysql":      check.NewMysql,
 	"postgresql": check.NewPsql,
 	// "mongo":      check.NewMongo,
 	"redis": check.NewRedis,

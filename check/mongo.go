@@ -38,8 +38,8 @@ func (m mongo) Health() (string, error) {
 	return "", nil
 }
 
-func NewMongo(host string) VersionChecker {
-	return mongo{
-		host: host,
-	}
-}
+// func NewMongo(host string) Dialer {
+// 	return mongo{
+// 		host: host,
+// 	}
+// }

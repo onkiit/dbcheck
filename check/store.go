@@ -8,6 +8,10 @@ type ClientChecker interface {
 	ActiveClient() error
 }
 
+type HealthChecker interface {
+	Health() error
+}
+
 type Dialer interface {
 	Dial() error
 }
