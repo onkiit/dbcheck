@@ -10,11 +10,6 @@ type psql struct {
 	host string
 }
 
-type clients struct {
-	usename string `json:"usename"`
-	datname string `json:"datname"`
-}
-
 func (p *psql) Version() error {
 	var version string
 	_ = p.DB.QueryRow("SELECT version()").Scan(&version)
