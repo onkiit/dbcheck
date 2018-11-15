@@ -14,8 +14,8 @@ type rediss struct {
 	host string
 }
 
-func (r *rediss) info() (string, error) {
-	info, err := redis.String(r.con.Do("INFO"))
+func (r *rediss) redisDo(command string) (string, error) {
+	info, err := redis.String(r.con.Do(command))
 	if err != nil {
 		return "", err
 	}
@@ -36,13 +36,12 @@ func (r *rediss) getString(info string, prefix string) (string, error) {
 			text = line
 			break
 		}
-
 	}
 	return text, nil
 }
 
 func (r *rediss) Version() error {
-	info, err := r.info()
+	info, err := r.redisDo("INFO")
 	if err != nil {
 		return err
 	}
@@ -58,7 +57,7 @@ func (r *rediss) Version() error {
 }
 
 func (r *rediss) ActiveClient() error {
-	info, err := r.info()
+	info, err := r.redisDo("INFO")
 	if err != nil {
 		return err
 	}
@@ -69,6 +68,11 @@ func (r *rediss) ActiveClient() error {
 	}
 
 	fmt.Println(client)
+
+	return nil
+}
+
+func (r *rediss) Health() error {
 
 	return nil
 }

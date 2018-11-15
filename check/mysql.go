@@ -11,15 +11,13 @@ type mysql struct {
 }
 
 type activeClient struct {
-	id       int     `json:"Id"`
-	user     string  `json:"User"`
-	host     string  `json:"Host"`
-	db       string  `json:"db"`
-	command  string  `json:"Command"`
-	time     int     `json:"Time"`
-	state    string  `json:"State"`
-	info     string  `json:"Info"`
-	progress float32 `json:"Progress"`
+	user    string `json:"USER"`
+	host    string `json:"HOST"`
+	db      string `json:"DB"`
+	command string `json:"COMMAND"`
+	state   string `json:"STATE"`
+	info    string `json:"INFO"`
+	time    string `json:"TIME_MS"`
 }
 
 func (m *mysql) Version() error {
@@ -46,17 +44,39 @@ func (m *mysql) Version() error {
 }
 
 func (m *mysql) ActiveClient() error {
-	rows, err := m.DB.Query("SHOW PROCESSLIST")
+	rows, err := m.DB.Query("SELECT USER, HOST, DB, COMMAND, STATE, INFO, TIME_MS FROM INFORMATION_SCHEMA.PROCESSLIST")
 	if err != nil {
 		return err
 	}
 
-	var info activeClient
+	activeClients := []activeClient{}
 	for rows.Next() {
-		_ = rows.Scan(info.id, info.user, info.host, info.db, info.command, info.time, info.state, info.info, info.progress)
+		var c activeClient
+		_ = rows.Scan(&c.user, &c.host, &c.db, &c.command, &c.state, &c.info, &c.time)
+
+		activeClients = append(activeClients, c)
 	}
 
+	info := fmt.Sprintf("active_client(s): %d \n", len(activeClients))
+	for _, v := range activeClients {
+		if v.state == "" {
+			v.state = "-"
+		}
+		if v.time == "" {
+			v.time = "0"
+		}
+		if v.info == "" {
+			v.info = "-"
+		}
+		info += " ____________\n User: " + v.user + "\n Host: " + v.host + "\n Command: " + v.command + "\n State: " + v.state + "\n DB Name: " + v.db + "\n Running Queries: " + v.info + "\n Time: " + v.time + "\n"
+	}
 	fmt.Println(info)
+	return nil
+}
+
+func (m *mysql) Health() error {
+	fmt.Println("health_status: \n")
+
 	return nil
 }
 
@@ -80,6 +100,10 @@ func (m *mysql) GetInfo() error {
 		return err
 	}
 	if err := m.ActiveClient(); err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if err := m.Health(); err != nil {
 		fmt.Println(err)
 		return err
 	}

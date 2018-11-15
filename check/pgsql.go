@@ -25,6 +25,7 @@ func (p *psql) ActiveClient() error {
 		fmt.Println(err)
 		return err
 	}
+
 	info := fmt.Sprintf("active_client(s): %d", count)
 	fmt.Println(info)
 	return nil
@@ -37,12 +38,12 @@ func (p *psql) Health() error {
 		return err
 	}
 
-	info := "health_status: \n"
+	info := "health_status: \n Storage Information \n"
 	for rows.Next() {
 		if err := rows.Scan(&datname, &size); err != nil {
 			return err
 		}
-		info += " Database: " + datname + "     Size: " + size + "\n"
+		info += " DB Name: " + datname + "     Size: " + size + "\n"
 	}
 
 	fmt.Println(info)
