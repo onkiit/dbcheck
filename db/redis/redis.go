@@ -13,8 +13,7 @@ import (
 )
 
 type rediss struct {
-	con  redis.Conn
-	host string
+	con redis.Conn
 }
 
 func (r *rediss) redisDo(command string) (string, error) {

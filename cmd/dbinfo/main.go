@@ -13,6 +13,10 @@ import (
 
 func dbInfo(db string, host string) {
 	dialer := registry.Dialers(db)
+	if dialer == nil {
+		fmt.Printf("(%s) Database not supported\n", db)
+		return
+	}
 	checker := dialer.Dial(host)
 	if err := checker.Version(); err != nil {
 		fmt.Println(err)
@@ -32,5 +36,6 @@ func main() {
 	db := flag.String("db", "mysql", "Specify your database server")
 	host := flag.String("host", "root@tcp(localhost:3306)/test", "Specify your database connection URI depending your server")
 	flag.Parse()
+
 	dbInfo(*db, *host)
 }
