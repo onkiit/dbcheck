@@ -1,8 +1,10 @@
-package check
+package psql
 
 import (
 	"database/sql"
 	"fmt"
+
+	_ "github.com/lib/pq"
 )
 
 type psql struct {
@@ -50,38 +52,42 @@ func (p *psql) Health() error {
 	return nil
 }
 
-func (p *psql) Dial() error {
-	db, err := sql.Open("postgres", p.host)
-	if err != nil {
-		return err
-	}
-	p.DB = db
+func (p *psql) Dial(host string) Checker {
+	db, _ := sql.Open("postgres", host)
 
-	return nil
+	return &psql{DB: db}
 }
 
-func (p *psql) GetInfo() error {
-	if err := p.Dial(); err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if err := p.Version(); err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if err := p.ActiveClient(); err != nil {
-		fmt.Println(err)
-		return err
-	}
-	if err := p.Health(); err != nil {
-		fmt.Println(err)
-		return err
-	}
-	return nil
+// func (p *psql) GetInfo() error {
+// 	if err := p.Dial(); err != nil {
+// 		fmt.Println(err)
+// 		return err
+// 	}
+// 	if err := p.Version(); err != nil {
+// 		fmt.Println(err)
+// 		return err
+// func NewRedis(host string) DBChecker {
+// 	return &rediss{
+// 		host: host,
+// 	}
+// }
+// 	}
+// 	if err := p.ActiveClient(); err != nil {
+// 		fmt.Println(err)
+// 		return err
+// 	}
+// 	if err := p.Health(); err != nil {
+// 		fmt.Println(err)
+// 		return err
+// 	}
+// 	return nil
+// }
+
+func NewPsql() Dialer {
+	return &psql{}
 }
 
-func NewPsql(host string) DBChecker {
-	return &psql{
-		host: host,
-	}
+func init() {
+	fmt.Println("initialization")
+	Register("postgresql", NewPsql)
 }

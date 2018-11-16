@@ -1,4 +1,4 @@
-package check
+package redis
 
 import (
 	"bufio"
@@ -107,8 +107,8 @@ func (r *rediss) GetInfo() error {
 	return nil
 }
 
-func NewRedis(host string) DBChecker {
-	return &rediss{
-		host: host,
-	}
-}
+// func NewRedis(host string) DBChecker {
+// 	return &rediss{
+// 		host: host,
+// 	}
+// }

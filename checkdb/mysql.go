@@ -1,8 +1,10 @@
-package check
+package mysql
 
 import (
 	"database/sql"
 	"fmt"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type mysql struct {
@@ -110,8 +112,8 @@ func (m *mysql) GetInfo() error {
 	return nil
 }
 
-func NewMysql(host string) DBChecker {
-	return &mysql{
-		host: host,
-	}
-}
+// func NewMysql(host string) DBChecker {
+// 	return &mysql{
+// 		host: host,
+// 	}
+// }

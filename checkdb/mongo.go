@@ -1,4 +1,4 @@
-package check
+package mongo
 
 import (
 	"fmt"
@@ -105,8 +105,8 @@ func (m *mongo) GetInfo() error {
 	return nil
 }
 
-func NewMongo(host string) DBChecker {
-	return &mongo{
-		host: host,
-	}
-}
+// func NewMongo(host string) DBChecker {
+// 	return &mongo{
+// 		host: host,
+// 	}
+// }
