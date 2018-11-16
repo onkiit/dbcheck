@@ -1,46 +1,36 @@
 package main
 
 import (
-	c "github.com/onkiit/dbcheck/checkdb"
+	"flag"
+	"fmt"
+
+	_ "github.com/onkiit/dbcheck/db/mongo"
+	_ "github.com/onkiit/dbcheck/db/mysql"
+	_ "github.com/onkiit/dbcheck/db/psql"
+	_ "github.com/onkiit/dbcheck/db/redis"
+	"github.com/onkiit/dbcheck/registry"
 )
 
-/*
-REVIEW
-1. naming package
-2. implement registry pattern
-3. handling possible nil return function from the caller
-4. folder structure: https://github.com/golang-standards/project-layout
-5.
-*/
-
-type App struct {
-	DBCheck map[string]c.Dialer
+func dbInfo(db string, host string) {
+	dialer := registry.Dialers(db)
+	checker := dialer.Dial(host)
+	if err := checker.Version(); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err := checker.ActiveClient(); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err := checker.Health(); err != nil {
+		fmt.Println(err)
+		return
+	}
 }
 
 func main() {
-	app := App{
-		DBCheck: make(map[string]c.Dialer),
-	}
-	post := app.DBCheck["postgresql"]
-
-	a := post.Dial("postgresql://postgres:postgres@localhost/postgres")
-	if err := a.Version(); err != nil {
-		return
-	}
-	if err := a.ActiveClient(); err != nil {
-		return
-	}
-	if err := a.Health(); err != nil {
-		return
-	}
-
-	// db := flag.String("db", "mysql", "Specify your database server")
-	// host := flag.String("host", "root@tcp(localhost:3306)/test", "Specify your database connection URI depending your server")
-	// flag.Parse()
-	// var checker = newChecker(*db, *host)
-	// if checker == nil {
-	// 	fmt.Printf("(%s) Unsupported database.\n", *db)
-	// 	return
-	// }
-	// checker.GetInfo()
+	db := flag.String("db", "mysql", "Specify your database server")
+	host := flag.String("host", "root@tcp(localhost:3306)/test", "Specify your database connection URI depending your server")
+	flag.Parse()
+	dbInfo(*db, *host)
 }
