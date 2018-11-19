@@ -89,5 +89,5 @@ func (r *rediss) Dial(host string) dbcheck.Checker {
 }
 
 func init() {
-	registry.Register("redis", &rediss{})
+	registry.RegisterDialers("redis", &rediss{})
 }

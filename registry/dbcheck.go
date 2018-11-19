@@ -8,7 +8,7 @@ var (
 	dialerRegistry = make(map[string]dbcheck.Dialer)
 )
 
-func Register(name string, dialer dbcheck.Dialer) {
+func RegisterDialers(name string, dialer dbcheck.Dialer) {
 	dialerRegistry[name] = dialer
 }
 

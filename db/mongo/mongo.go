@@ -84,5 +84,5 @@ func (m *mongo) Dial(host string) dbcheck.Checker {
 }
 
 func init() {
-	registry.Register("mongo", &mongo{})
+	registry.RegisterDialers("mongo", &mongo{})
 }

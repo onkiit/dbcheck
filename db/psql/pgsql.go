@@ -63,5 +63,5 @@ func (p *psql) Dial(host string) dbcheck.Checker {
 }
 
 func init() {
-	registry.Register("postgresql", &psql{})
+	registry.RegisterDialers("postgresql", &psql{})
 }

@@ -93,5 +93,5 @@ func (m *mysql) Dial(host string) dbcheck.Checker {
 }
 
 func init() {
-	registry.Register("mysql", &mysql{})
+	registry.RegisterDialers("mysql", &mysql{})
 }
