@@ -42,11 +42,10 @@ export default {
     },
     created(){
         this.getData()
-        console.log(this.$http)
     },
     methods: {
         getData(){
-            fetch("http://localhost:8180/getpsql")
+            this.$http.get("http://localhost:8180/getpsql")
             .then(resp => {
                 console.log(resp)
             })
