@@ -36,7 +36,7 @@ func (m *mongo) Version() error {
 		return err
 	}
 
-	version := fmt.Sprintf(" MongoDB\n db version %s \n git version %s \n OpenSSL version %s \n", buildInfo.Version, buildInfo.GitVersion, buildInfo.OpenSSLVersion)
+	version := fmt.Sprintf(" MongoDB\n db version %s \n git version %s \n", buildInfo.Version, buildInfo.GitVersion)
 
 	fmt.Println(version)
 	return nil
@@ -51,9 +51,9 @@ func (m *mongo) ActiveClient() error {
 		return err
 	}
 
-	re := res["globalLock"]
+	client := res["globalLock"].(bson.M)["activeClients"].(bson.M)["total"]
 
-	fmt.Println(re)
+	fmt.Printf(" active_client(s): %d \n", client)
 
 	return nil
 }
@@ -67,8 +67,8 @@ func (m *mongo) Health() error {
 		return err
 	}
 
-	fmt.Printf("health_status: \n")
-	fmt.Printf(" DB: %s\n Collection: %d\n Storage Size: %f\n Indexes: %d\n Data Size: %f\n", res["db"], res["collections"], res["storageSize"], res["indexes"], res["dataSize"])
+	fmt.Printf(" health_status: \n")
+	fmt.Printf("  DB: %s\n  Collection: %d\n  Storage Size: %f\n  Indexes: %d\n  Data Size: %f\n", res["db"], res["collections"], res["storageSize"], res["indexes"], res["dataSize"])
 
 	return nil
 }
