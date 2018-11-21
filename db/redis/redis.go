@@ -16,15 +16,12 @@ type rediss struct {
 	con redis.Conn
 }
 
-func (r *rediss) redisDo(command string) (string, error) {
-	info, err := redis.String(r.con.Do(command))
-	if err != nil {
-		return "", err
-	}
-	return info, nil
+func getValue(str string) string {
+	split := strings.Split(str, ":")
+	return split[1]
 }
 
-func (r *rediss) getString(info string, prefix string) (string, error) {
+func getString(info string, prefix string) (string, error) {
 	var text string
 	reader := bufio.NewReader(bytes.NewBufferString(info))
 	for {
@@ -42,40 +39,119 @@ func (r *rediss) getString(info string, prefix string) (string, error) {
 	return text, nil
 }
 
+func getUsage(info string) (string, error) {
+	str, err := getString(info, "used_memory")
+	if err != nil {
+		return "", err
+	}
+
+	usage := getValue(str)
+	return usage, nil
+}
+
+func getKeys(info string) ([]string, error) {
+	strExpired, err := getString(info, "expired_keys")
+	if err != nil {
+		return nil, err
+	}
+
+	strEvicted, err := getString(info, "evicted_keys")
+	if err != nil {
+		return nil, err
+	}
+
+	exp := getValue(strExpired)
+	evi := getValue(strEvicted)
+	return []string{exp, evi}, nil
+}
+
+func (r *rediss) redisDoString(command string, args ...interface{}) (string, error) {
+	info, err := redis.String(r.con.Do(command, args...))
+	if err != nil {
+		return "", err
+	}
+	return info, nil
+}
+
+func (r *rediss) redisDoInt(command string, args ...interface{}) (int, error) {
+	info, err := redis.Int(r.con.Do(command, args...))
+	if err != nil {
+		return 0, err
+	}
+	return info, nil
+}
+
 func (r *rediss) Version() error {
-	info, err := r.redisDo("INFO")
+	info, err := r.redisDoString("INFO", "SERVER")
 	if err != nil {
 		return err
 	}
 
-	version, err := r.getString(info, "redis_version")
+	strVersion, err := getString(info, "redis_version")
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(version)
+	strOs, err := getString(info, "os")
+	if err != nil {
+		return err
+	}
+
+	strGcc, err := getString(info, "gcc_version")
+	if err != nil {
+		return err
+	}
+
+	version := getValue(strVersion)
+	os := getValue(strOs)
+	gcc := getValue(strGcc)
+
+	fmt.Printf("Redis version: %s OS %s gcc_version %s \n", version, os, gcc)
 
 	return nil
 }
 
 func (r *rediss) ActiveClient() error {
-	info, err := r.redisDo("INFO")
+	info, err := r.redisDoString("INFO", "CLIENTS")
 	if err != nil {
 		return err
 	}
 
-	client, err := r.getString(info, "connected_clients")
+	str, err := getString(info, "connected_clients")
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(client)
+	client := getValue(str)
+
+	fmt.Printf("active_client(s): %s\n", client)
 
 	return nil
 }
 
 func (r *rediss) Health() error {
+	fmt.Println("health_status:")
+	size, err := r.redisDoInt("DBSIZE")
+	if err != nil {
+		return err
+	}
 
+	info, err := r.redisDoString("INFO")
+	if err != nil {
+		return err
+	}
+
+	usage, err := getUsage(info)
+	if err != nil {
+		return err
+	}
+
+	keys, err := getKeys(info)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf(" Available Key: %d\n Memory Usage: %s\n Expired Keys: %s\n Evicted Keys: %s\n", size, usage, keys[0], keys[1])
 	return nil
 }
 
