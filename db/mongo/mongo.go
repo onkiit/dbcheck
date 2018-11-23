@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/onkiit/dbcheck"
+	"github.com/onkiit/dbcheck/registry"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/onkiit/dbcheck/registry"
 )
 
 type mongo struct {

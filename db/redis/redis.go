@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/onkiit/dbcheck"
+	"github.com/onkiit/dbcheck/registry"
 
 	"github.com/gomodule/redigo/redis"
-	"github.com/onkiit/dbcheck/registry"
 )
 
 type rediss struct {
@@ -63,6 +63,41 @@ func getKeys(info string) ([]string, error) {
 	exp := getValue(strExpired)
 	evi := getValue(strEvicted)
 	return []string{exp, evi}, nil
+}
+
+func (r *rediss) getSlowlogCount() (int, error) {
+	count, err := redis.Int(r.con.Do("SLOWLOG", "LEN"))
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (r *rediss) getSlowLog(count int) error {
+	slowlog, err := redis.Values(r.con.Do("SLOWLOG", "GET", count))
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	// fmt.Println(slowlog[0].([]interface{})[4])
+	for i := 0; i < len(slowlog); i++ {
+
+		for j := i; j < len(slowlog[i].([]interface{})); j++ {
+			fmt.Println(slowlog[i].([]interface{}))
+		}
+	}
+	return nil
+}
+
+func (r *rediss) getMemoryStats() error {
+	stats, err := redis.Values(r.con.Do("MEMORY", "STATS"))
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	fmt.Printf(" Memory Stats\n  Peak Allocated: %d \n  Total Allocated: %d\n  Startup Allocated: %d\n  Peak Percentage: %s\n  Fragmentation: %s\n", stats[1], stats[3], stats[5], stats[27], stats[29])
+	return nil
 }
 
 func (r *rediss) redisDoString(command string, args ...interface{}) (string, error) {
@@ -139,6 +174,7 @@ func (r *rediss) Health() error {
 	info, err := r.redisDoString("INFO")
 	if err != nil {
 		return err
+
 	}
 
 	usage, err := getUsage(info)
@@ -151,7 +187,14 @@ func (r *rediss) Health() error {
 		return err
 	}
 
-	fmt.Printf(" Available Key: %d\n Memory Usage: %s\n Expired Keys: %s\n Evicted Keys: %s\n", size, usage, keys[0], keys[1])
+	countLog, err := r.getSlowlogCount()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf(" Available Key: %d\n Memory Usage: %s\n Expired Keys: %s\n Evicted Keys: %s\n Slowlog Count: %d\n", size, usage, keys[0], keys[1], countLog)
+	// _ = r.getSlowLog(countLog)
+	_ = r.getMemoryStats()
 	return nil
 }
 

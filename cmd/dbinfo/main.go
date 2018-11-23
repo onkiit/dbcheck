@@ -18,6 +18,10 @@ func dbInfo(db string, host string) {
 		return
 	}
 	checker := dialer.Dial(host)
+	if checker == nil {
+		fmt.Println("Server unreachable")
+		return
+	}
 	if err := checker.Version(); err != nil {
 		fmt.Println(err)
 		return
@@ -33,8 +37,8 @@ func dbInfo(db string, host string) {
 }
 
 func main() {
-	db := flag.String("db", "mysql", "Specify your database server")
-	host := flag.String("host", "root@tcp(localhost:3306)/test", "Specify your database connection URI depending your server")
+	db := flag.String("db", "redis", "Specify your database server. Supported databases (key): redis, mongo, postgresql, mysql ")
+	host := flag.String("host", "localhost:6379", "Specify your database connection URI depending your server")
 	flag.Parse()
 
 	dbInfo(*db, *host)
