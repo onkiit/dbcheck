@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"fmt"
+	"os/exec"
 
 	"github.com/gocql/gocql"
 	"github.com/onkiit/dbcheck"
@@ -22,12 +23,18 @@ func (c *cassandra) Version() error {
 }
 
 func (c *cassandra) ActiveClient() error {
-	fmt.Println("Unable to find active client for Cassandra")
+	fmt.Println("Cassandra does not provided active_client checking.")
 	return nil
 }
 
 func (c *cassandra) Health() error {
-	fmt.Println("Cassandra health")
+	//getting information from nodetool command line
+	fmt.Println("health information: ")
+	output, err := exec.Command("nodetool", "info").CombinedOutput()
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
 	return nil
 }
 
@@ -43,6 +50,7 @@ func (c *cassandra) Dial(host string) dbcheck.Checker {
 		fmt.Println(err)
 		return nil
 	}
+
 	return &cassandra{session: session}
 }
 

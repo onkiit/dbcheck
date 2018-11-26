@@ -14,16 +14,26 @@ type boltdb struct {
 }
 
 func (b *boltdb) Version() error {
-	fmt.Println("Bolt does not support version cheking.")
+	fmt.Println("Bolt does not support version checking.")
 	return nil
 }
 
 func (b *boltdb) ActiveClient() error {
+	dbStats := b.db.Stats()
+	fmt.Printf("transaction\n Started transaction: %d \n Open connection: %d\n", dbStats.TxN, dbStats.OpenTxN)
 
 	return nil
 }
 
 func (b *boltdb) Health() error {
+	tx, err := b.db.Begin(false)
+	if err != nil {
+		return err
+	}
+	cursor := tx.Cursor()
+	bucket := cursor.Bucket()
+	stats := bucket.Stats()
+	fmt.Printf("health status\n Number of bucket: %d\n Total Keys: %d\n", stats.BucketN, stats.KeyN)
 	return nil
 }
 

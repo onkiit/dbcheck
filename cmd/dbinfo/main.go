@@ -4,10 +4,13 @@ import (
 	"flag"
 	"fmt"
 
+	_ "github.com/onkiit/dbcheck/db/bolt"
+	_ "github.com/onkiit/dbcheck/db/cassandra"
 	_ "github.com/onkiit/dbcheck/db/mongo"
 	_ "github.com/onkiit/dbcheck/db/mysql"
 	_ "github.com/onkiit/dbcheck/db/psql"
 	_ "github.com/onkiit/dbcheck/db/redis"
+	_ "github.com/onkiit/dbcheck/db/sqlite"
 	"github.com/onkiit/dbcheck/registry"
 )
 
@@ -37,7 +40,7 @@ func dbInfo(db string, host string) {
 }
 
 func main() {
-	db := flag.String("db", "redis", "Specify your database server. Supported databases (key): redis, mongo, postgresql, mysql ")
+	db := flag.String("db", "redis", "Specify your database server. Supported databases (key): redis, mongo, postgresql, mysql, cassandra, bolt, sqlite ")
 	host := flag.String("host", "localhost:6379", "Specify your database connection URI depending your server")
 	flag.Parse()
 
