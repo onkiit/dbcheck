@@ -29,11 +29,16 @@ func (s *sqlite) ActiveClient() error {
 }
 
 func (s *sqlite) Health() error {
+	var pageSize, pageCount int
+	if err := s.db.QueryRow("select page_size as pageSize, page_count as pageCount from pragma_page_size, pragma_page_count;").Scan(&pageSize, &pageCount); err != nil {
+		return err
+	}
+	fmt.Printf("health_status: \n pragma_page_size: %d\n pragma_page_count: %d\n", pageSize, pageCount)
 	return nil
 }
 
-func (s *sqlite) Dial(host string) dbcheck.Checker {
-	db, err := sql.Open("sqlite3", "")
+func (s *sqlite) Dial(path string) dbcheck.Checker {
+	db, err := sql.Open("sqlite3", path)
 	if err != nil {
 		fmt.Println(err)
 		return nil
