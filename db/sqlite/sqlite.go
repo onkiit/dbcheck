@@ -25,6 +25,7 @@ func (s *sqlite) Version() error {
 }
 
 func (s *sqlite) ActiveClient() error {
+	fmt.Println("Sqlite does not provided active_client checking")
 	return nil
 }
 
