@@ -2,6 +2,7 @@ package psql
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "github.com/lib/pq"
@@ -36,6 +37,7 @@ func (p *psql) ActiveClient() error {
 
 func (p *psql) Health() error {
 	var datname, size string
+
 	rows, err := p.DB.Query("select datname, pg_size_pretty(pg_database_size(datname)) as size from pg_database order by pg_database_size(datname) desc;")
 	if err != nil {
 		return err
@@ -48,8 +50,54 @@ func (p *psql) Health() error {
 		}
 		info += " DB Name: " + datname + "     Size: " + size + "\n"
 	}
+	fmt.Print(info)
 
-	fmt.Println(info)
+	if err := p.getTableSize(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *psql) getTables() ([]string, error) {
+	rows, err := p.DB.Query("select relname as table from pg_stat_user_tables")
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	var tables []string
+	for rows.Next() {
+		var table string
+		err := rows.Scan(&table)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		tables = append(tables, table)
+	}
+
+	if len(tables) < 1 {
+		return nil, errors.New("Could not find table")
+	}
+
+	return tables, nil
+}
+
+func (p *psql) getTableSize() error {
+	tables, err := p.getTables()
+	if err != nil {
+		return err
+	}
+	fmt.Println("Table Information")
+	for _, v := range tables {
+		var size string
+		q := fmt.Sprintf("SELECT pg_size_pretty(pg_total_relation_size('%s')) as size", v)
+		err := p.DB.QueryRow(q).Scan(&size)
+		if err != nil {
+			return err
+		}
+		fmt.Printf(" Table Name: %s\t\tSize: %s \n", v, size)
+	}
 	return nil
 }
 
