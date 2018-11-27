@@ -14,13 +14,19 @@ import (
 	"github.com/onkiit/dbcheck/registry"
 )
 
-func dbInfo(db string, host string) {
+func dbInfo(db string, host string, path string) {
+	var dial string
+	if host == "" {
+		dial = path
+	} else {
+		dial = host
+	}
 	dialer := registry.Dialers(db)
 	if dialer == nil {
 		fmt.Printf("(%s) Database not supported\n", db)
 		return
 	}
-	checker := dialer.Dial(host)
+	checker := dialer.Dial(dial)
 	if checker == nil {
 		fmt.Println("Server unreachable")
 		return
@@ -40,9 +46,10 @@ func dbInfo(db string, host string) {
 }
 
 func main() {
-	db := flag.String("db", "redis", "Specify your database server. Supported databases (key): redis, mongo, postgresql, mysql, cassandra, bolt, sqlite ")
-	host := flag.String("host", "localhost:6379", "Specify your database connection URI depending your server")
+	db := flag.String("db", "", "Specify your database server. Supported databases (key): redis, mongo, postgresql, mysql, cassandra, bolt, sqlite ")
+	host := flag.String("host", "", "Specify your database connection URI depending your server")
+	path := flag.String("path", "", "Specify your database path (used for bolt and sqlite)")
 	flag.Parse()
 
-	dbInfo(*db, *host)
+	dbInfo(*db, *host, *path)
 }
