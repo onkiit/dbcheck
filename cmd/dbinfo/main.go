@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strings"
 
 	_ "github.com/onkiit/dbcheck/db/bolt"
 	_ "github.com/onkiit/dbcheck/db/cassandra"
@@ -50,6 +52,21 @@ func main() {
 	host := flag.String("host", "", "Specify your database connection URI depending your server")
 	path := flag.String("path", "", "Specify your database path (used for bolt and sqlite)")
 	flag.Parse()
+	pathDB := []string{"sqlite", "bolt"}
+	hostDB := []string{"mysql", "postgresql", "mongo", "redis", "cassandra"}
+	for _, v := range pathDB {
+		if v == *db && strings.Contains(os.Args[3], "host") {
+			fmt.Printf("%s need a argument path (found %s)\n", *db, os.Args[3])
+			return
+		}
+	}
+
+	for _, v := range hostDB {
+		if v == *db && strings.Contains(os.Args[3], "path") {
+			fmt.Printf("%s need a argument host (found %s)\n", *db, os.Args[3])
+			return
+		}
+	}
 
 	dbInfo(*db, *host, *path)
 }
