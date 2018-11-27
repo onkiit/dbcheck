@@ -48,7 +48,7 @@ func (p *psql) Health() error {
 		if err := rows.Scan(&datname, &size); err != nil {
 			return err
 		}
-		info += " DB Name: " + datname + "     Size: " + size + "\n"
+		info += "  DB Name: " + datname + "\t\tSize: " + size + "\n"
 	}
 	fmt.Print(info)
 
@@ -88,15 +88,21 @@ func (p *psql) getTableSize() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Table Information")
+	fmt.Println(" Table Information")
 	for _, v := range tables {
-		var size string
-		q := fmt.Sprintf("SELECT pg_size_pretty(pg_total_relation_size('%s')) as size", v)
-		err := p.DB.QueryRow(q).Scan(&size)
+		var tableSize, indexSize string
+		qTable := fmt.Sprintf("SELECT pg_size_pretty(pg_total_relation_size('%s')) as tableSize", v)
+		qIndex := fmt.Sprintf("SELECT pg_size_pretty(pg_indexes_size('%s')) as indexSize", v)
+		err := p.DB.QueryRow(qTable).Scan(&tableSize)
 		if err != nil {
 			return err
 		}
-		fmt.Printf(" Table Name: %s\t\tSize: %s \n", v, size)
+		err = p.DB.QueryRow(qIndex).Scan(&indexSize)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("  Table Name: %s\t\tTable Size: %s\tIndex Size: %s\n", v, tableSize, indexSize)
 	}
 	return nil
 }
