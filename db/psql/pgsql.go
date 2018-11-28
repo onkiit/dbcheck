@@ -92,22 +92,24 @@ func (p *psql) getTableSize() error {
 	for k, v := range tables {
 		var tableSize, indexSize string
 		fmt.Printf("  > Schema: %s\n", k)
-		if len(v) > 0 {
-			for _, val := range v {
-				qTable := fmt.Sprintf("SELECT pg_size_pretty(pg_total_relation_size('%s.%s')) as tableSize", k, val)
-				qIndex := fmt.Sprintf("SELECT pg_size_pretty(pg_indexes_size('%s.%s')) as indexSize", k, val)
-				err := p.DB.QueryRow(qTable).Scan(&tableSize)
-				if err != nil {
-					fmt.Println(err)
-					return err
-				}
-				err = p.DB.QueryRow(qIndex).Scan(&indexSize)
-				if err != nil {
-					fmt.Println(err)
-					return err
-				}
-				fmt.Printf("     Table: %s\n      Table Size: %s\n      Index Size: %s\n", val, tableSize, indexSize)
+		if len(v) < 1 {
+			return errors.New("Schema has no table")
+		}
+
+		for _, val := range v {
+			qTable := fmt.Sprintf("SELECT pg_size_pretty(pg_total_relation_size('%s.%s')) as tableSize", k, val)
+			qIndex := fmt.Sprintf("SELECT pg_size_pretty(pg_indexes_size('%s.%s')) as indexSize", k, val)
+			err := p.DB.QueryRow(qTable).Scan(&tableSize)
+			if err != nil {
+				fmt.Println(err)
+				return err
 			}
+			err = p.DB.QueryRow(qIndex).Scan(&indexSize)
+			if err != nil {
+				fmt.Println(err)
+				return err
+			}
+			fmt.Printf("     Table: %s\n      Table Size: %s\n      Index Size: %s\n", val, tableSize, indexSize)
 		}
 	}
 	return nil
