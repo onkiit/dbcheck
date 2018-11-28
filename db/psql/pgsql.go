@@ -43,7 +43,7 @@ func (p *psql) Health() error {
 		return err
 	}
 
-	info := "health_status: \n Storage Information \n"
+	info := "health_status: \n Database Information \n"
 	for rows.Next() {
 		if err := rows.Scan(&datname, &size); err != nil {
 			return err
@@ -58,22 +58,22 @@ func (p *psql) Health() error {
 	return nil
 }
 
-func (p *psql) getTables() ([]string, error) {
-	rows, err := p.DB.Query("select relname as table from pg_stat_user_tables")
+func (p *psql) getTables() (map[string][]string, error) {
+	rows, err := p.DB.Query("select schemaname as schema, relname as table from pg_statio_all_tables where schemaname not in ('pg_catalog', 'pg_toast', 'information_schema')")
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 
-	var tables []string
+	tables := make(map[string][]string)
 	for rows.Next() {
-		var table string
-		err := rows.Scan(&table)
+		var schema, table string
+		err := rows.Scan(&schema, &table)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
-		tables = append(tables, table)
+		tables[schema] = append(tables[schema], table)
 	}
 
 	if len(tables) < 1 {
@@ -89,20 +89,25 @@ func (p *psql) getTableSize() error {
 		return err
 	}
 	fmt.Println(" Table Information")
-	for _, v := range tables {
+	for k, v := range tables {
 		var tableSize, indexSize string
-		qTable := fmt.Sprintf("SELECT pg_size_pretty(pg_total_relation_size('%s')) as tableSize", v)
-		qIndex := fmt.Sprintf("SELECT pg_size_pretty(pg_indexes_size('%s')) as indexSize", v)
-		err := p.DB.QueryRow(qTable).Scan(&tableSize)
-		if err != nil {
-			return err
+		if len(v) > 0 {
+			for _, val := range v {
+				qTable := fmt.Sprintf("SELECT pg_size_pretty(pg_total_relation_size('%s.%s')) as tableSize", k, val)
+				qIndex := fmt.Sprintf("SELECT pg_size_pretty(pg_indexes_size('%s.%s')) as indexSize", k, val)
+				err := p.DB.QueryRow(qTable).Scan(&tableSize)
+				if err != nil {
+					fmt.Println(err)
+					return err
+				}
+				err = p.DB.QueryRow(qIndex).Scan(&indexSize)
+				if err != nil {
+					fmt.Println(err)
+					return err
+				}
+				fmt.Printf("  Schema: %s\t\t Table: %s\t\tTable Size: %s\t\tIndex Size: %s\n", k, val, tableSize, indexSize)
+			}
 		}
-		err = p.DB.QueryRow(qIndex).Scan(&indexSize)
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("  Table Name: %s\t\tTable Size: %s\tIndex Size: %s\n", v, tableSize, indexSize)
 	}
 	return nil
 }
