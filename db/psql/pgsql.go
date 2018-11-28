@@ -91,6 +91,7 @@ func (p *psql) getTableSize() error {
 	fmt.Println(" Table Information")
 	for k, v := range tables {
 		var tableSize, indexSize string
+		fmt.Printf("  > Schema: %s\n", k)
 		if len(v) > 0 {
 			for _, val := range v {
 				qTable := fmt.Sprintf("SELECT pg_size_pretty(pg_total_relation_size('%s.%s')) as tableSize", k, val)
@@ -105,7 +106,7 @@ func (p *psql) getTableSize() error {
 					fmt.Println(err)
 					return err
 				}
-				fmt.Printf("  Schema: %s\t\t Table: %s\t\tTable Size: %s\t\tIndex Size: %s\n", k, val, tableSize, indexSize)
+				fmt.Printf("     Table: %s\n      Table Size: %s\n      Index Size: %s\n", val, tableSize, indexSize)
 			}
 		}
 	}
