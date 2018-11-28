@@ -12,8 +12,25 @@ Before use this tool, you need some packages installed on your system.
 - [SQLite Driver](https://github.com/mattn/go-sqlite3)
 
 ### Using this tool
+Get this tool by execute this command
 ```
 go get github.com/onkiit/dbcheck
+```
+
+With go, you can simply get all required packages by its tool with a single command.
+First go to root project:
+```
+cd $(go env GOPATH)/src/github.com/onkiit/dbcheck
+
+```
+then hit 
+```
+go get -v -u
+```
+
+To build this tool, you can follow this command below
+
+```
 cd $(go env GOPATH)/src/github.com/onkiit/dbcheck/cmd/dbinfo
 go build
 ```
