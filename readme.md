@@ -23,7 +23,7 @@ First go to root project:
 cd $(go env GOPATH)/src/github.com/onkiit/dbcheck
 
 ```
-then hit 
+then hit: 
 ```
 go get -v -u
 ```
