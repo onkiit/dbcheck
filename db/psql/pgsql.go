@@ -1,13 +1,16 @@
 package psql
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
+
+	"github.com/onkiit/dbinfo"
 
 	_ "github.com/lib/pq"
 	"github.com/onkiit/dbcheck"
 	"github.com/onkiit/dbcheck/registry"
+	"github.com/onkiit/dbinfo/postgres"
 )
 
 type psql struct {
@@ -15,103 +18,49 @@ type psql struct {
 }
 
 func (p *psql) Version() error {
-	var version string
-	_ = p.DB.QueryRow("SELECT version()").Scan(&version)
+	con := &dbinfo.Conn{
+		DB: p.DB,
+	}
+	store := postgres.New(con)
+	res, err := store.GetVersion(context.Background())
+	if err != nil {
+		return err
+	}
 
-	fmt.Println(version)
+	fmt.Println(res.Version)
 	return nil
 }
 
 func (p *psql) ActiveClient() error {
-	var count int
-	err := p.DB.QueryRow("SELECT count(0) FROM pg_stat_activity where state='active' ").Scan(&count)
+	con := &dbinfo.Conn{
+		DB: p.DB,
+	}
+	store := postgres.New(con)
+	res, err := store.GetActiveClient(context.Background())
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
-	info := fmt.Sprintf("active_client(s): %d", count)
-	fmt.Println(info)
+	fmt.Printf("active_client(s): %d\n", res.ActiveClient)
 	return nil
 }
 
 func (p *psql) Health() error {
-	var datname, size string
-
-	rows, err := p.DB.Query("select datname, pg_size_pretty(pg_database_size(datname)) as size from pg_database order by pg_database_size(datname) desc;")
+	con := &dbinfo.Conn{
+		DB: p.DB,
+	}
+	store := postgres.New(con)
+	res, err := store.GetHealth(context.Background())
 	if err != nil {
 		return err
 	}
-
-	info := "health_status: \n Database Information \n"
-	for rows.Next() {
-		if err := rows.Scan(&datname, &size); err != nil {
-			return err
-		}
-		info += "  DB Name: " + datname + "\t\tSize: " + size + "\n"
-	}
-	fmt.Print(info)
-
-	if err := p.getTableSize(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *psql) getTables() (map[string][]string, error) {
-	rows, err := p.DB.Query("select schemaname as schema, relname as table from pg_statio_all_tables where schemaname not in ('pg_catalog', 'pg_toast', 'information_schema')")
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
+	fmt.Println("health_status: ")
+	fmt.Printf(" Database Information: \n  Database Name: %s\t Database Size: %s\n", res.PsqlHealth.DBInformation.DBName, res.PsqlHealth.DBInformation.DBSize)
+	fmt.Println(" Table Information: ")
+	for _, v := range res.PsqlHealth.TableInformation {
+		fmt.Printf("  > Schema: %s\n    Table: %s\n    Table Size: %s\n    Index Size: %s\n", v.SchemaName, v.TableName, v.TableSize, v.IndexSize)
 	}
 
-	tables := make(map[string][]string)
-	for rows.Next() {
-		var schema, table string
-		err := rows.Scan(&schema, &table)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		tables[schema] = append(tables[schema], table)
-	}
-
-	if len(tables) < 1 {
-		return nil, errors.New("Could not find table")
-	}
-
-	return tables, nil
-}
-
-func (p *psql) getTableSize() error {
-	tables, err := p.getTables()
-	if err != nil {
-		return err
-	}
-	fmt.Println(" Table Information")
-	for k, v := range tables {
-		var tableSize, indexSize string
-		fmt.Printf("  > Schema: %s\n", k)
-		if len(v) < 1 {
-			return errors.New("Schema has no table")
-		}
-
-		for _, val := range v {
-			qTable := fmt.Sprintf("SELECT pg_size_pretty(pg_total_relation_size('%s.%s')) as tableSize", k, val)
-			qIndex := fmt.Sprintf("SELECT pg_size_pretty(pg_indexes_size('%s.%s')) as indexSize", k, val)
-			err := p.DB.QueryRow(qTable).Scan(&tableSize)
-			if err != nil {
-				fmt.Println(err)
-				return err
-			}
-			err = p.DB.QueryRow(qIndex).Scan(&indexSize)
-			if err != nil {
-				fmt.Println(err)
-				return err
-			}
-			fmt.Printf("     Table: %s\n      Table Size: %s\n      Index Size: %s\n", val, tableSize, indexSize)
-		}
-	}
 	return nil
 }
 
