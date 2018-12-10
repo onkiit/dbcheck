@@ -1,8 +1,11 @@
 package cassandra
 
 import (
+	"context"
 	"fmt"
-	"os/exec"
+
+	"github.com/onkiit/dbinfo"
+	cs "github.com/onkiit/dbinfo/cassandra"
 
 	"github.com/gocql/gocql"
 	"github.com/onkiit/dbcheck"
@@ -14,11 +17,15 @@ type cassandra struct {
 }
 
 func (c *cassandra) Version() error {
-	q := c.session.Query("select cql_version from system.local;").Iter()
-	var cqlVersion string
-	q.Scan(&cqlVersion)
-
-	fmt.Printf("Cassandra version %s CQL version %s \n", q.Host().Version(), cqlVersion)
+	con := &dbinfo.Conn{
+		CQLSession: c.session,
+	}
+	store := cs.New(con)
+	ver, err := store.GetVersion(context.Background())
+	if err != nil {
+		return err
+	}
+	fmt.Println(ver.Version)
 	return nil
 }
 
@@ -28,13 +35,16 @@ func (c *cassandra) ActiveClient() error {
 }
 
 func (c *cassandra) Health() error {
-	//getting information from nodetool command line
-	fmt.Println("health information: ")
-	output, err := exec.Command("nodetool", "info").CombinedOutput()
+	con := &dbinfo.Conn{
+		CQLSession: c.session,
+	}
+	store := cs.New(con)
+	h, err := store.GetHealth(context.Background())
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(output))
+	fmt.Printf("health information: \n")
+	fmt.Printf(" ID\t\t : %s\n Gossip Active   : %s\n Thrift Active   : %s\n Native Transport: %s\n Load\t\t : %s\n Generation No   : %s\n Uptime\t\t : %s\n", h.CassandraHealth.ID, h.CassandraHealth.GossipActive, h.CassandraHealth.ThriftActive, h.CassandraHealth.NativeTransport, h.CassandraHealth.Load, h.CassandraHealth.GenerationNo, h.CassandraHealth.Uptime)
 	return nil
 }
 
