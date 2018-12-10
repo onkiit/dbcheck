@@ -1,8 +1,12 @@
 package bolt
 
 import (
+	"context"
 	"fmt"
 	"time"
+
+	"github.com/onkiit/dbinfo"
+	bl "github.com/onkiit/dbinfo/bolt"
 
 	"github.com/boltdb/bolt"
 	"github.com/onkiit/dbcheck"
@@ -19,21 +23,32 @@ func (b *boltdb) Version() error {
 }
 
 func (b *boltdb) ActiveClient() error {
-	dbStats := b.db.Stats()
-	fmt.Printf("transaction\n Started transaction: %d \n Open connection: %d\n", dbStats.TxN, dbStats.OpenTxN)
+	con := &dbinfo.Conn{
+		BoltDB: b.db,
+	}
 
+	store := bl.New(con)
+	c, err := store.GetActiveClient(context.Background())
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Transaction: %d\n", c.ActiveClient)
 	return nil
 }
 
 func (b *boltdb) Health() error {
-	tx, err := b.db.Begin(false)
+	con := &dbinfo.Conn{
+		BoltDB: b.db,
+	}
+
+	store := bl.New(con)
+	h, err := store.GetHealth(context.Background())
 	if err != nil {
 		return err
 	}
-	cursor := tx.Cursor()
-	bucket := cursor.Bucket()
-	stats := bucket.Stats()
-	fmt.Printf("health status\n Number of bucket: %d\n Total Keys: %d\n", stats.BucketN, stats.KeyN)
+
+	fmt.Printf("health information: \n Available Bucket: %d\n Available Key: %d\n", h.BoltHealth.NumberOfBucket, h.BoltHealth.NumberOfKey)
 	return nil
 }
 

@@ -1,8 +1,12 @@
 package sqlite
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+
+	"github.com/onkiit/dbinfo"
+	sq "github.com/onkiit/dbinfo/sqlite"
 
 	//sqlite3 driver
 	_ "github.com/mattn/go-sqlite3"
@@ -15,12 +19,16 @@ type sqlite struct {
 }
 
 func (s *sqlite) Version() error {
-	var version string
-	err := s.db.QueryRow("select sqlite_version() as version;").Scan(&version)
+	con := &dbinfo.Conn{
+		DB: s.db,
+	}
+	store := sq.New(con)
+	v, err := store.GetVersion(context.Background())
 	if err != nil {
 		return err
 	}
-	fmt.Printf("SQLite version %s\n", version)
+
+	fmt.Print(v.Version)
 	return nil
 }
 
@@ -30,11 +38,18 @@ func (s *sqlite) ActiveClient() error {
 }
 
 func (s *sqlite) Health() error {
-	var pageSize, pageCount int
-	if err := s.db.QueryRow("select page_size as pageSize, page_count as pageCount from pragma_page_size, pragma_page_count;").Scan(&pageSize, &pageCount); err != nil {
+	con := &dbinfo.Conn{
+		DB: s.db,
+	}
+
+	store := sq.New(con)
+	h, err := store.GetHealth(context.Background())
+	if err != nil {
 		return err
 	}
-	fmt.Printf("health_status: \n pragma_page_size: %d\n pragma_page_count: %d\n", pageSize, pageCount)
+
+	fmt.Printf("health_status: \n pragma_page_size: %d\n pragma_page_count: %d\n", h.SQLiteHealth.PragmaPageSize, h.SQLiteHealth.PragmaPageCount)
+
 	return nil
 }
 
