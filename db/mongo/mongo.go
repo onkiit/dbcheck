@@ -1,74 +1,66 @@
 package mongo
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/onkiit/dbinfo"
+	mg "github.com/onkiit/dbinfo/mongo"
 
 	"github.com/onkiit/dbcheck"
 	"github.com/onkiit/dbcheck/registry"
 
 	"github.com/globalsign/mgo"
-	"github.com/globalsign/mgo/bson"
 )
 
 type mongo struct {
 	session *mgo.Session
 }
 
-type mongoHealth struct {
-	db          string `bson:"db""`
-	collections int    `bson:"collections"`
-	views       int    `bson:"views"`
-	objects     int    `bson:"objects"`
-	avgObjSize  int    `bson:"avgObjSize"`
-	dataSize    int    `bson:"dataSize"`
-	storageSize int    `bson:"storageSize"`
-	numExtents  int    `bson:"numExtents"`
-	indexes     int    `bson:"indexes"`
-	indexSize   int    `bson:"indexSize"`
-	fsUsedSize  int    `bson:"fsUsedSize"`
-	fsTotalSize int    `bson:"fsTotalSize"`
-}
-
 func (m *mongo) Version() error {
-	buildInfo, err := m.session.BuildInfo()
+	con := &dbinfo.Conn{
+		Session: m.session,
+	}
+
+	store := mg.New(con)
+	v, err := store.GetVersion(context.Background())
 	if err != nil {
-		fmt.Println("getting build info", err)
 		return err
 	}
 
-	version := fmt.Sprintf(" MongoDB\n db version %s \n git version %s \n", buildInfo.Version, buildInfo.GitVersion)
-
-	fmt.Println(version)
+	fmt.Println(v.Version)
 	return nil
 }
 
 func (m *mongo) ActiveClient() error {
-	sessionCP := m.session.Copy()
-	defer sessionCP.Close()
+	con := &dbinfo.Conn{
+		Session: m.session,
+	}
 
-	var res bson.M
-	if err := sessionCP.DB("test").Run("serverStatus", &res); err != nil {
+	store := mg.New(con)
+	c, err := store.GetActiveClient(context.Background())
+	if err != nil {
 		return err
 	}
 
-	client := res["globalLock"].(bson.M)["activeClients"].(bson.M)["total"]
-
-	fmt.Printf(" active_client(s): %d \n", client)
+	fmt.Printf(" active_client(s): %d \n", c.ActiveClient)
 
 	return nil
 }
 
 func (m *mongo) Health() error {
-	sessionCP := m.session.Copy()
-	defer sessionCP.Close()
+	con := &dbinfo.Conn{
+		Session: m.session,
+	}
 
-	res := bson.M{}
-	if err := sessionCP.DB("test").Run("dbstats", &res); err != nil {
+	store := mg.New(con)
+	h, err := store.GetHealth(context.Background())
+	if err != nil {
 		return err
 	}
 
 	fmt.Printf(" health_status: \n")
-	fmt.Printf("  DB: %s\n  Collection: %d\n  Storage Size: %f\n  Indexes: %d\n  Data Size: %f\n", res["db"], res["collections"], res["storageSize"], res["indexes"], res["dataSize"])
+	fmt.Printf("  DB: %s\n  Collection: %d\n  Storage Size: %f\n  Indexes: %d\n  Data Size: %f\n", h.MongoHealth.DBName, h.MongoHealth.AvailableCollection, h.MongoHealth.StorageSize, h.MongoHealth.Indexes, h.MongoHealth.DataSize)
 
 	return nil
 }
